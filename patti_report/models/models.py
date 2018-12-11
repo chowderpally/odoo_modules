@@ -137,7 +137,7 @@ class PattiReportWizard(models.TransientModel):
                     col += 1
                     sheet.write(row, col, line.price_unit, border)
                     col += 1
-                    sheet.write(row, col, '0.00', border)
+                    sheet.write(row, col, line.gross, border)
                     col += 1
                     sheet.write(row, col, line.rusum, border)
                     col += 1
