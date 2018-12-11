@@ -320,7 +320,7 @@ class PattiReportWizard(models.TransientModel):
                     'po_value': po_val,
                     'payments': total_pay,
                     'opening_bal': report_log.closing_bal,
-                    'closing_bal': (po_val + 0.00) - total_pay,
+                    'closing_bal': (po_val + report_log.closing_bal) - total_pay,
                 })
                 return render_report()
             else:
