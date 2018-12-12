@@ -29,6 +29,17 @@ class PattiReportWizard(models.TransientModel):
     @api.multi
     def generate_xlsx_report(self):
 
+        def get_total_freight():
+            po_domain = ['&', ('partner_id', '=', self.partner_id.id), ('type', '=', 'in_invoice'),
+                              ('date_invoice', '>=', self.from_date), ('date_invoice', '<=', self.to_date)]
+            po_value = self.env['account.invoice'].search(po_domain)
+
+            tot_freight = 0.00
+            for po in po_value:
+                for fr in po.invoice_line_ids:
+                    tot_freight += fr.freight
+            return tot_freight
+
         def get_po_value():
             po_domain = ['&', ('partner_id', '=', self.partner_id.id), ('type', '=', 'in_invoice'),
                               ('date_invoice', '>=', self.from_date), ('date_invoice', '<=', self.to_date)]
@@ -226,8 +237,20 @@ class PattiReportWizard(models.TransientModel):
             sheet.write(row, 2, '', border)
             sheet.write(row, 3, '', border)
             sheet.write(row, 4, '', border)
-            paid_amt = '=SUM(F{}:F{})'.format(nw_row1 + 1, row)
-            sheet.write(row, 5, paid_amt, border)
+
+            payments_dom = ['&', ('partner_type', '=', 'supplier'), ('partner_id', '=', self.partner_id.id),
+                          ('payment_date', '>=', self.from_date), ('payment_date', '<=', self.to_date)]
+            payments_count = self.env['account.payment'].search(payments_dom)
+
+            if len(payments_count) == 0:
+                paid_amt = '0.00'
+                sheet.write(row, 5, paid_amt, border)
+            if len(payments_count) == 1:
+                paid_amt = '=F{}'.format(nw_row1 + 1)
+                sheet.write(row, 5, paid_amt, border)
+            if len(payments_count) > 1:
+                paid_amt = '=SUM(F{}:F{})'.format(nw_row1 + 1, row)
+                sheet.write(row, 5, paid_amt, border)
 
             # Third Table
             sheet.write(nw_row, 8, 'Total Quantity', border)
@@ -259,7 +282,7 @@ class PattiReportWizard(models.TransientModel):
             sheet.write(nw_row, 9, paid_amt, border)
             nw_row += 1
             sheet.write(nw_row, 8, 'Payable Amount', border)
-            payable = '=SUM(J{}:J{}) - J{}'.format(temp + 1, nw_row - 1, nw_row)
+            payable = '=SUM(J{}:J{}) - J{} - J{}'.format(temp + 1, nw_row - 1, nw_row, nw_row - 4)
             sheet.write(nw_row, 9, payable, border)
             nw_row += 1
             temp1 = nw_row
@@ -297,6 +320,7 @@ class PattiReportWizard(models.TransientModel):
         if not report_log:
             po_val = get_po_value()
             total_pay = get_payments()
+            total_freight = get_total_freight()
 
             self.env['report.log'].create({
                 'date_from': self.from_date,
@@ -305,13 +329,14 @@ class PattiReportWizard(models.TransientModel):
                 'po_value': po_val,
                 'payments': total_pay,
                 'opening_bal': 0.00,
-                'closing_bal': (po_val + 0.00) - total_pay,
+                'closing_bal': (po_val + 0.00) - total_pay - total_freight,
             })
             return render_report()
         else:
             if (self.from_date > report_log.date_from) and (self.from_date > report_log.date_to):
                 po_val = get_po_value()
                 total_pay = get_payments()
+                total_freight = get_total_freight()
 
                 self.env['report.log'].create({
                     'date_from': self.from_date,
@@ -320,7 +345,7 @@ class PattiReportWizard(models.TransientModel):
                     'po_value': po_val,
                     'payments': total_pay,
                     'opening_bal': report_log.closing_bal,
-                    'closing_bal': (po_val + report_log.closing_bal) - total_pay,
+                    'closing_bal': (po_val + report_log.closing_bal) - total_pay - total_freight,
                 })
                 return render_report()
             else:
