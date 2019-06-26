@@ -1,0 +1,113 @@
+<odoo>
+  <data>
+    <record id="report_log_form" model="ir.ui.view">
+        <field name="name">report.log.form</field>
+        <field name="model">report.log</field>
+        <field name="arch" type="xml">
+          <form string="Report Log">
+            <sheet>
+              <group>
+                <separator string="Vendor" required="1"/>
+                <field name="partner_id" required="1"/>
+              </group>
+              <group>
+                <separator string="Date Range"/>
+                <field name="date_from" required="1"/>
+                <field name="date_to" required="1"/>
+              </group>
+              <group>
+                <separator string="Purchase and Payments"/>
+                <field name="po_value"  required="1"/>
+                <field name="payments" required="1"/>
+              </group>
+              <group>
+                <separator string="Balances"/>
+                <field name="opening_bal" required="1"/>
+                <field name="closing_bal" required="1"/>
+              </group>
+            </sheet>
+          </form>
+        </field>
+    </record>
+
+    <record id="report_log_tree" model="ir.ui.view">
+        <field name="name">report.log.tree</field>
+        <field name="model">report.log</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="partner_id"/>
+                <field name="date_from"/>
+                <field name="date_to"/>
+                <field name="po_value" sum="Total Po Value"/>
+                <field name="payments" sum="Total Payments"/>
+                <field name="opening_bal"/>
+                <field name="closing_bal"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="report_log_action" model="ir.actions.act_window">
+      <field name="name">Report Log</field>
+      <field name="type">ir.actions.act_window</field>
+      <field name="res_model">report.log</field>
+      <field name="view_type">form</field>
+      <field name="view_mode">tree,form</field>
+    </record>
+
+    <menuitem id="report_log_menuitem"
+              name="Patti Report Log"
+              parent="account.menu_finance_reports"
+              action="report_log_action" />
+
+    <record id="report_wizard_view" model="ir.ui.view">
+      <field name="name">Patti Report</field>
+      <field name="model">report.wizard</field>
+      <field name="arch" type="xml">
+        <form string="Patti Report">
+          <group>
+            <separator string="Choose Vendor"/>
+            <field name="partner_id" required="1"/>
+            <separator string="Date Range" />
+            <field name="from_date" required="1"/>
+            <field name="to_date" required="1"/>
+          </group>
+          <footer>
+            <button name="generate_xlsx_report" string="Print" type="object" class="btn-primary"/>
+            <button string="Cancel" class="btn-default" special="cancel"/>
+          </footer>
+        </form>
+      </field>
+    </record>
+
+    <record id="report_wizard_action" model="ir.actions.act_window">
+      <field name="name">Report Wizard</field>
+      <field name="type">ir.actions.act_window</field>
+      <field name="res_model">report.wizard</field>
+      <field name="view_type">form</field>
+      <field name="view_mode">form</field>
+      <field name="target">new</field>
+    </record>
+
+    <menuitem id="report_wizard_menuitem"
+              name="Patti Report"
+              parent="account.menu_finance_reports"
+              action="report_wizard_action" />
+
+    <record id="report_download_wizard_view" model="ir.ui.view">
+        <field name="name">Patti Report Download</field>
+        <field name="model">report.store</field>
+        <field name="type">form</field>
+        <field name="arch" type="xml">
+          <form>
+            <group>
+              <field name="name" invisible="1"/>
+              <field name="report" filename="name"/>
+            </group>
+            <footer>
+              <button special="cancel" string="Cancel" class="oe_link"/>
+            </footer>
+          </form>
+        </field>
+    </record>
+  </data>
+</odoo>
